@@ -1,0 +1,4 @@
+# Không commit các file/thư mục nhạy cảm hoặc tự sinh
+.env
+node_modules/
+.DS_Store
