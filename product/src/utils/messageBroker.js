@@ -10,7 +10,7 @@ class MessageBroker {
 
         setTimeout(async() => {
             try {
-                const connection = await amqp.connect("amqp://guest:guest@localhost:5672", {
+                const connection = await amqp.connect(process.env.RABBITMQ_URI || "amqp://guest:guest@rabbitmq:5672", {
                     frameMax: 0,
                 });
                 this.channel = await connection.createChannel();

@@ -8,7 +8,9 @@ class App {
     constructor() {
         this.app = express();
         this.connectDB();
+        this.setupRoutes();
         this.setupOrderConsumer();
+
     }
 
     async connectDB() {
@@ -19,6 +21,20 @@ class App {
         console.log("MongoDB connected");
     }
 
+    setupRoutes() {
+        // ✅ Thêm endpoint để lấy thông tin hóa đơn theo ID
+        this.app.get("/api/orders/:id", async(req, res) => {
+            try {
+                const order = await Order.findOne({ orderId: req.params.id }); // 🔹 tìm theo orderId
+                if (!order)
+                    return res.status(404).json({ message: "Order not found" });
+                res.json(order);
+            } catch (err) {
+                res.status(500).json({ message: err.message });
+            }
+        });
+    }
+
     async disconnectDB() {
         await mongoose.disconnect();
         console.log("MongoDB disconnected");
@@ -27,47 +43,58 @@ class App {
     async setupOrderConsumer() {
         console.log("Connecting to RabbitMQ...");
 
-        setTimeout(async() => {
+        const connectToRabbit = async(retryCount = 0) => {
             try {
-                const amqpServer = "amqp://guest:guest@localhost:5672";
-                const connection = await amqp.connect("amqp://guest:guest@localhost:5672", {
-                    frameMax: 0, // hoặc ít nhất 131072 để vượt giới hạn 8192
-                });
+                const connection = await amqp.connect(config.rabbitMQURI, { frameMax: 0 });
                 console.log("Connected to RabbitMQ");
+
                 const channel = await connection.createChannel();
                 await channel.assertQueue("orders");
 
                 channel.consume("orders", async(data) => {
-                    // Consume messages from the order queue on buy
                     console.log("Consuming ORDER service");
                     const { products, username, orderId } = JSON.parse(data.content);
 
                     const newOrder = new Order({
-                        products,
+                        orderId,
+                        products: products.map(p => ({
+                            _id: p._id.toString(),
+                            name: p.name,
+                            price: p.price
+                        })), // ✅ lưu cả tên và giá sản phẩm
                         user: username,
-                        totalPrice: products.reduce((acc, product) => acc + product.price, 0),
+                        totalPrice: products.reduce((acc, p) => acc + (p.price || 0), 0),
                     });
 
-                    // Save order to DB
                     await newOrder.save();
-
-                    // Send ACK to ORDER service
                     channel.ack(data);
                     console.log("Order saved to DB and ACK sent to ORDER queue");
 
-                    // Send fulfilled order to PRODUCTS service
-                    // Include orderId in the message
                     const { user, products: savedProducts, totalPrice } = newOrder.toJSON();
                     channel.sendToQueue(
                         "products",
-                        Buffer.from(JSON.stringify({ orderId, user, products: savedProducts, totalPrice }))
+                        Buffer.from(
+                            JSON.stringify({ orderId, user, products: savedProducts, totalPrice })
+                        )
                     );
                 });
             } catch (err) {
-                console.error("Failed to connect to RabbitMQ:", err.message);
+                console.error(
+                    `Failed to connect to RabbitMQ (attempt ${retryCount + 1}):`,
+                    err.message
+                );
+                if (retryCount < 5) {
+                    console.log("Retrying in 5 seconds...");
+                    setTimeout(() => connectToRabbit(retryCount + 1), 5000);
+                }
             }
-        }, 10000); // add a delay to wait for RabbitMQ to start in docker-compose
+        };
+
+        // Chờ RabbitMQ khởi động xong (20 giây)
+        setTimeout(() => connectToRabbit(), 20000);
     }
+
+
 
 
 
