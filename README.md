@@ -1,7 +1,6 @@
 # EProject Phase 1 – Microservices E-Commerce System
 
 ## 1. Giới thiệu
-
 Dự án triển khai mô hình **E-Commerce** theo kiến trúc **Microservices** gồm 4 dịch vụ chính:
 
 | Service | Port | Chức năng chính |
@@ -16,7 +15,6 @@ Mỗi service được phát triển, chạy độc lập, giao tiếp qua HTTP 
 ---
 
 ## 2. Cấu trúc dự án
-
 ```
 EProject-Phase-1/
 │
@@ -42,7 +40,6 @@ EProject-Phase-1/
 ---
 
 ## 3. Cách cài đặt và khởi chạy
-
 ### Bước 1. Chuẩn bị môi trường
 Cài đặt:
 - **Node.js**
@@ -51,9 +48,8 @@ Cài đặt:
 
 Chạy RabbitMQ bằng Docker:
 ```bash
-docker run -d --hostname my-rabbit --name rabbitmq   -p 5672:5672 -p 15672:15672 rabbitmq:3-management
+docker run -d --hostname my-rabbit --name rabbitmq -p 5672:5672 -p 15672:15672 rabbitmq:3-management
 ```
-
 RabbitMQ Management UI: [http://localhost:15672](http://localhost:15672)  
 Đăng nhập: `guest / guest`
 
@@ -61,7 +57,6 @@ RabbitMQ Management UI: [http://localhost:15672](http://localhost:15672)
 
 ### Bước 2. Cài đặt thư viện cho từng service
 Mở 4 terminal riêng và chạy trong từng thư mục:
-
 ```bash
 npm install
 node index.js
@@ -77,7 +72,6 @@ Server started on port [3000 / 3001 / 3002 / 3003]
 ---
 
 ## 4. Cách kiểm thử các service
-
 ### Auth Service (port 3000)
 - `POST /register` → đăng ký tài khoản
 - `POST /login` → đăng nhập, nhận JWT
@@ -104,7 +98,6 @@ Server started on port [3000 / 3001 / 3002 / 3003]
 ---
 
 ## 5. Tổng kết trạng thái hệ thống
-
 | Service | Port | Trạng thái | Mô tả |
 |----------|------|-------------|--------|
 | Auth Service | 3000 |  Hoạt động | Đăng ký & đăng nhập |
@@ -115,7 +108,6 @@ Server started on port [3000 / 3001 / 3002 / 3003]
 ---
 
 ## 6. Kết luận
-
 - Hệ thống hoạt động theo mô hình **Microservices hoàn chỉnh**.  
 - Kết nối thành công giữa **MongoDB**, **RabbitMQ**, và **API Gateway**.  
 - Các chức năng chính được kiểm thử đầy đủ bằng **Postman**.  
