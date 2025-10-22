@@ -3,46 +3,46 @@ name: CI-CD Pipeline
 on: [push, pull_request]
 
 jobs:
-  test:
+  build-test:
     runs-on: ubuntu-latest
 
     services:
-  mongo:
-    image: mongo:5.0
-    ports:
-      - 27017:27017
-    env:
-      MONGO_INITDB_ROOT_USERNAME: root
-      MONGO_INITDB_ROOT_PASSWORD: example
-    options: >-
-      --health-cmd "mongo --username root --password example --authenticationDatabase admin --eval 'db.runCommand({ ping: 1 })'"
-      --health-interval=10s
-      --health-timeout=5s
-      --health-retries=5
+      mongo:
+        image: mongo:5.0
+        ports:
+          - 27017:27017
+        env:
+          MONGO_INITDB_ROOT_USERNAME: root
+          MONGO_INITDB_ROOT_PASSWORD: example
+        options: >-
+          --health-cmd "mongo --username root --password example --authenticationDatabase admin --eval 'db.runCommand({ ping: 1 })'"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
 
     steps:
-    - name: Checkout code
-      uses: actions/checkout@v3
+      - name: Checkout code
+        uses: actions/checkout@v3
 
-    - name: Create .env file
-      run: |
-        echo "MONGODB_AUTH_URI=mongodb://root:example@127.0.0.1:27017/auth_db?authSource=admin" >> auth/.env
-        echo "JWT_SECRET=mysecretkey" >> auth/.env
-        echo "MONGODB_PRODUCT_URI=mongodb://root:example@127.0.0.1:27017/product_db?authSource=admin" >> product/.env
-        echo "JWT_SECRET=mysecretkey" >> product/.env
+      - name: Create .env files
+        run: |
+          echo "MONGODB_AUTH_URI=mongodb://root:example@127.0.0.1:27017/auth_db?authSource=admin" >> auth/.env
+          echo "JWT_SECRET=mysecretkey" >> auth/.env
+          echo "MONGODB_PRODUCT_URI=mongodb://root:example@127.0.0.1:27017/product_db?authSource=admin" >> product/.env
+          echo "JWT_SECRET=mysecretkey" >> product/.env
 
-        - name: Install dependencies
-          run: |
-            cd auth && npm ci && cd ..
-            cd product && npm ci && cd ..
-            npm ci
+      - name: Install dependencies
+        run: |
+          cd auth && npm ci && cd ..
+          cd product && npm ci && cd ..
+          npm ci
 
-    - name: Run tests for auth
-      run: |
-        cd auth
-        npm test
+      - name: Run tests for auth
+        run: |
+          cd auth
+          npm test
 
-    - name: Run tests for product
-      run: |
-        cd product
-        npm test
+      - name: Run tests for product
+        run: |
+          cd product
+          npm test
