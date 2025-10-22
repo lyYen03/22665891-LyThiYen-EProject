@@ -1,6 +1,6 @@
 import express from "express";
 import mongoose from "mongoose";
-import config from "./config.js";
+import config from "./config/index.js";
 import authMiddleware from "./middlewares/authMiddleware.js";
 import AuthController from "./controllers/authController.js";
 
