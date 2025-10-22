@@ -1,61 +1,45 @@
 name: CI-CD Pipeline
 
-on:
-  push:
-    branches: [ main ]
-  pull_request:
-    branches: [ main ]
+on: [push, pull_request]
 
 jobs:
-  build-test-deploy:
+  test:
     runs-on: ubuntu-latest
 
+    services:
+      mongo:
+        image: mongo:6
+        ports:
+          - 27017:27017
+        options: >-
+          --health-cmd "mongo --eval 'db.runCommand({ ping: 1 })'"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+
     steps:
-      #1. Lấy source code từ GitHub
-      - name: Checkout repository
-        uses: actions/checkout@v3
+    - name: Checkout code
+      uses: actions/checkout@v3
 
-      #2. Tạo file môi trường cho các service
-      - name: Create .env files
-        run: |
-          echo "MONGODB_AUTH_URI=${{ secrets.MONGODB_AUTH_URI }}" >> auth/.env
-          echo "JWT_SECRET=${{ secrets.JWT_SECRET }}" >> auth/.env
-          echo "MONGODB_PRODUCT_URI=${{ secrets.MONGODB_PRODUCT_URI }}" >> product/.env
-          echo "LOGIN_TEST_USER=${{ secrets.LOGIN_TEST_USER }}" >> product/.env
-          echo "LOGIN_TEST_PASSWORD=${{ secrets.LOGIN_TEST_PASSWORD }}" >> product/.env
+    - name: Create .env file
+      run: |
+        echo "MONGODB_AUTH_URI=mongodb://127.0.0.1:27017/auth_db" >> auth/.env
+        echo "JWT_SECRET=mysecretkey" >> auth/.env
+        echo "MONGODB_PRODUCT_URI=mongodb://127.0.0.1:27017/product_db" >> product/.env
+        echo "JWT_SECRET=mysecretkey" >> product/.env
 
-      #3. Cài đặt thư viện Node.js cho từng service
-      - name: Install dependencies
-        run: |
-          cd auth && npm ci && cd ..
-          cd product && npm ci && cd ..
-          cd order && npm ci && cd ..
-          cd api-gateway && npm ci && cd ..
+    - name: Install dependencies
+      run: |
+        cd auth && npm ci && cd ..
+        cd product && npm ci && cd ..
+        npm ci
 
-      #4. Chạy test cho Auth Service
-      - name: Run tests - Auth
-        run: |
-          cd auth
-          npm test
+    - name: Run tests for auth
+      run: |
+        cd auth
+        npm test
 
-      #5. Chạy test cho Product Service
-      - name: Run tests - Product
-        run: |
-          cd product
-          npm test
-
-      #6. Build Docker images cho tất cả service
-      - name: Build Docker images
-        run: |
-          docker-compose build
-
-      #7. Chạy Docker containers để kiểm tra
-      - name: Run Docker containers
-        run: |
-          docker-compose up -d
-          docker ps
-
-      #8. Kiểm tra các container đang hoạt động
-      - name: Check running containers
-        run: |
-          docker ps -a
+    - name: Run tests for product
+      run: |
+        cd product
+        npm test
