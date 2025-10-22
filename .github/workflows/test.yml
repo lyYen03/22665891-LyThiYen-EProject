@@ -1,55 +1,48 @@
 name: CI
-
 on: [push, pull_request]
 
 jobs:
   test:
     runs-on: ubuntu-latest
-
+    services:
+      mongo:
+        image: mongo:6.0
+        ports:
+          - 27017:27017
+        options: >-
+          --health-cmd "mongosh --eval 'db.adminCommand({ ping: 1 })'"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
     steps:
-    # Lấy code từ repository
-    - name: Checkout code
-      uses: actions/checkout@v3.2.0
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-    # Cài Node.js (phiên bản 18)
-    - name: Setup Node.js
-      uses: actions/setup-node@v3
-      with:
-        node-version: '18'
+      - name: Set up Docker Compose
+        uses: docker/setup-buildx-action@v3
 
-    # Chạy MongoDB và RabbitMQ bằng Docker (liên kết Docker)
-    - name: Setup MongoDB & RabbitMQ
-      uses: isbang/compose-action@v1
-      with:
-        compose-file: ./docker-compose.yml
+      - name: Create .env file
+        run: |
+          echo "MONGODB_AUTH_URI=${{ secrets.MONGODB_PRODUCT_URI }}" >> auth/.env
+          echo "JWT_SECRET=${{ secrets.JWT_SECRET }}" >> auth/.env
+          echo "JWT_SECRET=${{ secrets.JWT_SECRET }}" >> product/.env
+          echo "MONGODB_PRODUCT_URI=${{ secrets.MONGODB_PRODUCT_URI }}" >> product/.env
+          echo "LOGIN_TEST_USER=${{ secrets.LOGIN_TEST_USER }}" >> product/.env
+          echo "LOGIN_TEST_PASSWORD=${{ secrets.LOGIN_TEST_PASSWORD }}" >> product/.env
 
-    # Tạo file .env cho Auth & Product
-    - name: Create .env file
-      run: |
-        echo "MONGODB_AUTH_URI=mongodb://mongodb:27017/auth_db" >> auth/.env
-        echo "JWT_SECRET=mysecretkey" >> auth/.env
-        echo "JWT_SECRET=mysecretkey" >> product/.env
-        echo "MONGODB_PRODUCT_URI=mongodb://mongodb:27017/product_db" >> product/.env
-        echo "LOGIN_TEST_USER=user1" >> product/.env
-        echo "LOGIN_TEST_PASSWORD=12345" >> product/.env
+      - name: Install dependencies
+        run: |
+          cd auth && npm ci && cd ..
+          cd product && npm ci && cd ..
+          npm ci
 
-    # Cài dependencies cho từng service
-    - name: Install dependencies
-      run: |
-        cd auth && npm ci && cd ..
-        cd product && npm ci && cd ..
-        npm ci
+      - name: Run tests for auth
+        run: |
+          cd auth
+          npm test
 
-    # Chạy test cho Auth
-    - name: Run tests for auth
-      run: |
-        cd auth
-        npm test
-
-    # Chạy test cho Product (Auth chạy nền)
-    - name: Run tests for product
-      run: |
-        cd auth && npm start &
-        sleep 5
-        cd ../product
-        npm test
+      - name: Run tests for product
+        run: |
+          cd auth && npm start &
+          cd product
+          npm test
