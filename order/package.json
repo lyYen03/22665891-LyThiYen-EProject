@@ -18,6 +18,7 @@
     "mongoose": "^7.0.1"
   },
   "devDependencies": {
+    "chai": "^6.2.0",
     "mocha": "^11.7.4"
   }
 }
