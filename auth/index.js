@@ -1,7 +1,5 @@
-import dotenv from "dotenv";
-import App from "./src/app.js";
-
-dotenv.config();
+require("dotenv").config();
+const App = require("./src/app");
 
 const app = new App();
 app.start();

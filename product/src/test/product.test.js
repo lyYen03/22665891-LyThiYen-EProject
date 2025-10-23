@@ -11,61 +11,41 @@ describe("Products", () => {
     let authToken;
 
     before(async function() {
-        this.timeout(30000);
+        this.timeout(20000);
         app = new App();
 
-        console.log("🔹 Kết nối MongoDB và RabbitMQ...");
-        await app.connectDB();
-        await new Promise((r) => setTimeout(r, 2000));
-        await app.setupMessageBroker();
+        // Khởi tạo kết nối DB & RabbitMQ
+        await Promise.all([app.connectDB(), app.setupMessageBroker()]);
 
-        // Khởi động service product (tránh khởi động lại nhiều lần)
-        if (!app.server) {
-            app.start();
-            await new Promise((r) => setTimeout(r, 2000));
-        }
+        // Đợi Auth service khởi động ổn định (nếu chạy song song trong CI)
+        await new Promise((resolve) => setTimeout(resolve, 4000));
 
-        console.log("Lấy JWT token từ AUTH service...");
-        try {
-            const authRes = await chai
-                .request("http://localhost:3000")
-                .post("/login")
-                .send({
-                    username: process.env.LOGIN_TEST_USER || "user1",
-                    password: process.env.LOGIN_TEST_PASSWORD || "12345",
-                });
+        // 🔹 Gọi tới AUTH service thật để login và lấy JWT
+        const authRes = await chai
+            .request("http://localhost:3000")
+            .post("/login")
+            .send({
+                username: process.env.LOGIN_TEST_USER || "user1",
+                password: process.env.LOGIN_TEST_PASSWORD || "12345",
+            });
 
-            expect(authRes).to.have.status(200);
-            authToken = authRes.body.token;
-            console.log("Token from Auth:", authToken);
-        } catch (err) {
-            console.error("Lỗi khi lấy token từ Auth:", err.message);
-            throw err;
-        }
+        expect(authRes).to.have.status(200);
+        authToken = authRes.body.token;
+        console.log("Token from Auth:", authToken);
+
+        // Khởi động Product service
+        app.start();
     });
 
     after(async function() {
-        this.timeout(15000);
-        console.log("🧹 Dọn dẹp kết nối MongoDB và dừng server...");
-        try {
-            await app.disconnectDB();
-            if (app.server) {
-                await new Promise((resolve) => {
-                    app.server.close(() => {
-                        console.log("Server stopped");
-                        resolve();
-                    });
-                });
-            }
-        } catch (err) {
-            console.warn("Lỗi khi dừng server:", err.message);
-        }
+        this.timeout(10000);
+        await app.disconnectDB();
+        app.stop();
     });
 
     describe("POST /products", () => {
         it("should create a new product", async function() {
-            this.timeout(15000);
-
+            this.timeout(10000);
             const product = {
                 name: "Product 1",
                 description: "Description of Product 1",
@@ -87,7 +67,6 @@ describe("Products", () => {
 
         it("should return an error if name is missing", async function() {
             this.timeout(10000);
-
             const product = {
                 description: "Description without name",
                 price: 10.99,

@@ -1,10 +1,11 @@
-import jwt from "jsonwebtoken";
-import config from "../config/index.js";
+const jwt = require("jsonwebtoken");
+const config = require("../config");
 
 /**
  * Middleware to verify the token
  */
-function authMiddleware(req, res, next) {
+
+module.exports = function(req, res, next) {
     const token = req.header("x-auth-token");
 
     if (!token) {
@@ -18,6 +19,4 @@ function authMiddleware(req, res, next) {
     } catch (e) {
         res.status(400).json({ message: "Token is not valid" });
     }
-}
-
-export default authMiddleware;
+};

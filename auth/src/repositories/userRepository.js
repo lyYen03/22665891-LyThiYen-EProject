@@ -1,4 +1,4 @@
-import User from "../models/user.js";
+const User = require("../models/user");
 
 /**
  * Class to encapsulate the logic for the user repository
@@ -13,4 +13,4 @@ class UserRepository {
     }
 }
 
-export default UserRepository;
+module.exports = UserRepository;

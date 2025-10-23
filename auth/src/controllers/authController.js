@@ -1,8 +1,9 @@
-import AuthService from "../services/authService.js";
+const AuthService = require("../services/authService");
 
 /**
  * Class to encapsulate the logic for the auth routes
  */
+
 class AuthController {
     constructor() {
         this.authService = new AuthService();
@@ -27,7 +28,7 @@ class AuthController {
             const existingUser = await this.authService.findUserByUsername(user.username);
 
             if (existingUser) {
-                console.log("Username already taken");
+                console.log("Username already taken")
                 throw new Error("Username already taken");
             }
 
@@ -50,4 +51,4 @@ class AuthController {
     }
 }
 
-export default AuthController;
+module.exports = AuthController;

@@ -1,8 +1,8 @@
-import express from "express";
-import mongoose from "mongoose";
-import config from "./config/index.js";
-import authMiddleware from "./middlewares/authMiddleware.js";
-import AuthController from "./controllers/authController.js";
+const express = require("express");
+const mongoose = require("mongoose");
+const config = require("./config");
+const authMiddleware = require("./middlewares/authMiddleware");
+const AuthController = require("./controllers/authController");
 
 class App {
     constructor() {
@@ -34,15 +34,11 @@ class App {
     setRoutes() {
         this.app.post("/login", (req, res) => this.authController.login(req, res));
         this.app.post("/register", (req, res) => this.authController.register(req, res));
-        this.app.get("/dashboard", authMiddleware, (req, res) =>
-            res.json({ message: "Welcome to dashboard" })
-        );
+        this.app.get("/dashboard", authMiddleware, (req, res) => res.json({ message: "Welcome to dashboard" }));
     }
 
     start() {
-        this.server = this.app.listen(3000, () =>
-            console.log("Server started on port 3000")
-        );
+        this.server = this.app.listen(3000, () => console.log("Server started on port 3000"));
     }
 
     async stop() {
@@ -52,4 +48,4 @@ class App {
     }
 }
 
-export default App;
+module.exports = App;

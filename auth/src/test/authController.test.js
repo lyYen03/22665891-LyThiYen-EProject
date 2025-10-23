@@ -1,45 +1,79 @@
-import * as chai from "chai";
-import chaiHttp from "chai-http";
-import App from "../app.js";
-import dotenv from "dotenv";
+const chai = require("chai");
+const chaiHttp = require("chai-http");
+const App = require("../app");
+require("dotenv").config();
 
-dotenv.config();
-
-// Dùng default export của plugin
+chai.use(chaiHttp); // dòng này phải có, và phải sau require
 const { expect } = chai;
-chai.use(chaiHttp);
 
-// 🟢 Chai HTTP không có `chaiHttp.request()`
-// nên dùng `chai.request()` sau khi .use()
+
 describe("User Authentication", () => {
     let app;
-    let requester;
 
     before(async() => {
         app = new App();
         await app.connectDB();
         app.start();
-
-        // tạo instance requester sau khi server start
-        requester = chai.request.agent(app.app);
     });
 
     after(async() => {
         await app.authController.authService.deleteTestUsers();
         await app.disconnectDB();
         app.stop();
-        requester.close();
     });
 
     describe("POST /register", () => {
         it("should register a new user", async() => {
-            const res = await requester
+            const res = await chai
+                .request(app.app)
                 .post("/register")
                 .send({ username: "testuser", password: "password" });
 
             expect(res).to.have.status(200);
             expect(res.body).to.have.property("_id");
             expect(res.body).to.have.property("username", "testuser");
+        });
+
+        it("should return an error if the username is already taken", async() => {
+            const res = await chai
+                .request(app.app)
+                .post("/register")
+                .send({ username: "testuser", password: "password" });
+
+            expect(res).to.have.status(400);
+            expect(res.body).to.have.property("message", "Username already taken");
+        });
+    });
+
+    describe("POST /login", () => {
+        it("should return a JWT token for a valid user", async() => {
+            const res = await chai
+                .request(app.app)
+                .post("/login")
+                .send({ username: "testuser", password: "password" });
+
+            expect(res).to.have.status(200);
+            expect(res.body).to.have.property("token");
+        });
+
+        it("should return an error for an invalid user", async() => {
+            const res = await chai
+                .request(app.app)
+                .post("/login")
+                .send({ username: "invaliduser", password: "password" });
+
+            expect(res).to.have.status(400);
+            expect(res.body).to.have.property("message", "Invalid username or password");
+        });
+
+        it("should return an error for an incorrect password", async() => {
+            const res = await chai
+                .request(app.app)
+                .post("/login")
+                .send({ username: "testuser", password: "wrongpassword" });
+
+            expect(res).to.have.status(400);
+            expect(res.body).to.have.property("message", "Invalid username or password");
         });
     });
 });

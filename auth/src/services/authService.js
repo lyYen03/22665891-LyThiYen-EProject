@@ -1,8 +1,8 @@
-import * as bcrypt from "bcryptjs";
-import jwt from "jsonwebtoken";
-import UserRepository from "../repositories/userRepository.js";
-import config from "../config/index.js";
-import User from "../models/user.js";
+const bcrypt = require("bcryptjs");
+const jwt = require("jsonwebtoken");
+const UserRepository = require("../repositories/userRepository");
+const config = require("../config");
+const User = require("../models/user");
 
 /**
  * Class to hold the business logic for the auth service interacting with the user repository
@@ -48,4 +48,4 @@ class AuthService {
     }
 }
 
-export default AuthService;
+module.exports = AuthService;
