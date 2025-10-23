@@ -5,10 +5,12 @@ import dotenv from "dotenv";
 
 dotenv.config();
 
-// Gắn plugin chai-http
-chai.use(chaiHttp);
+// Dùng default export của plugin
 const { expect } = chai;
+chai.use(chaiHttp);
 
+// 🟢 Chai HTTP không có `chaiHttp.request()`
+// nên dùng `chai.request()` sau khi .use()
 describe("User Authentication", () => {
     let app;
     let requester;
@@ -18,15 +20,15 @@ describe("User Authentication", () => {
         await app.connectDB();
         app.start();
 
-        // ✅ Tạo instance requester từ plugin chai-http
-        requester = chaiHttp.request(app.app).keepOpen();
+        // tạo instance requester sau khi server start
+        requester = chai.request.agent(app.app);
     });
 
     after(async() => {
         await app.authController.authService.deleteTestUsers();
         await app.disconnectDB();
         app.stop();
-        await requester.close(); // đóng requester sau khi test
+        requester.close();
     });
 
     describe("POST /register", () => {
