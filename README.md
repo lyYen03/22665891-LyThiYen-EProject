@@ -1,114 +1,225 @@
-# EProject Phase 1 – Microservices E-Commerce System
+# DỰ ÁN: Hệ thống phần mềm thương mại điện tử dựa trên kiến trúc dịch vụ vi mô
+**Tác giả:** Lý Thị Yến  
+**MSSV:** 22665891  
+**Môn học:** Lập trình hướng dịch vụ  
+**Tên dự án:** EProject Phase 1 – Microservices E-Commerce System
+---
 
-## 1. Giới thiệu
-Dự án triển khai mô hình **E-Commerce** theo kiến trúc **Microservices** gồm 4 dịch vụ chính:
+## I. Giới thiệu tổng quan
 
-| Service | Port | Chức năng chính |
-|----------|------|------------------|
-| **Auth Service** | 3000 | Xử lý đăng ký, đăng nhập, xác thực bằng JWT |
-| **Product Service** | 3001 | Quản lý sản phẩm, mua hàng |
-| **Order Service** | 3002 | Nhận và lưu đơn hàng từ RabbitMQ |
-| **API Gateway** | 3003 | Trung gian định tuyến các request giữa các service |
-
-Mỗi service được phát triển, chạy độc lập, giao tiếp qua HTTP hoặc RabbitMQ.
+Dự án này được xây dựng nhằm mục tiêu phát triển một **hệ thống thương mại điện tử có khả năng mở rộng**, áp dụng **kiến trúc Microservices**, cho phép các thành phần hoạt động độc lập nhưng có thể giao tiếp thông qua **RabbitMQ Message Broker**.  
+Mỗi service đảm nhận một nghiệp vụ riêng biệt: xác thực người dùng, quản lý sản phẩm, xử lý đơn hàng và điều phối yêu cầu thông qua **API Gateway**.
 
 ---
 
-## 2. Cấu trúc dự án
-```
+## II. Công nghệ sử dụng
+
+| Thành phần          | Công nghệ                   |
+| ------------------- | --------------------------- |
+| Ngôn ngữ            | Node.js (Express Framework) |
+| Cơ sở dữ liệu       | MongoDB                     |
+| Message Queue       | RabbitMQ                    |
+| Kiến trúc           | Microservices               |
+| Containerization    | Docker, Docker Compose      |
+| CI/CD               | GitHub Actions              |
+| Kiểm thử            | Mocha, Chai, Chai-HTTP      |
+| Cấu hình môi trường | dotenv                      |
+
+---
+
+## III. Kiến trúc hệ thống (System Architecture)
+
+
+                API Gateway (Port 3003)
+                        |
+   -----------------------------------------------------
+   |                    |                    |
+ Auth Service      Product Service       Order Service
+   (3000)               (3001)                (3002)
+   |                    |                    |
+   ----------------------|--------------------
+                         |
+                  MongoDB, RabbitMQ
+---
+
+## IV. Cấu trúc thư mục dự án
 EProject-Phase-1/
 │
-├── api-gateway/        # Điều hướng request
-│   ├── index.js
-│   └── README.md
-│
-├── auth/               # Đăng ký, đăng nhập, xác thực
+├── api-gateway/
 │   ├── src/
-│   └── README.md
+│   │   ├── routes/
+│   │   │   └── gatewayRoutes.js
+│   │   ├── utils/
+│   │   │   ├── messageBroker.js
+│   │   │   └── isAuthenticated.js
+│   │   └── app.js
+│   ├── Dockerfile
+│   ├── package.json
+│   └── .env
 │
-├── product/            # Quản lý sản phẩm, gửi đơn hàng
+├── auth/
 │   ├── src/
-│   └── README.md
+│   │   ├── controllers/
+│   │   │   └── authController.js
+│   │   ├── models/
+│   │   │   └── user.js
+│   │   ├── routes/
+│   │   │   └── authRoutes.js
+│   │   ├── utils/
+│   │   │   └── jwtHelper.js
+│   │   ├── test/
+│   │   │   └── authController.test.js
+│   │   └── app.js
+│   ├── Dockerfile
+│   ├── package.json
+│   └── .env
 │
-├── order/              # Nhận và lưu đơn hàng
+├── order/
 │   ├── src/
-│   └── README.md
+│   │   ├── controllers/
+│   │   │   └── orderController.js
+│   │   ├── models/
+│   │   │   └── order.js
+│   │   ├── routes/
+│   │   │   └── orderRoutes.js
+│   │   ├── services/
+│   │   │   └── orderService.js
+│   │   ├── test/
+│   │   │   └── order.test.js
+│   │   └── utils/
+│   │       ├── messageBroker.js
+│   │       └── isAuthenticated.js
+│   ├── Dockerfile
+│   ├── package.json
+│   └── .env
 │
-└── README.md           # File mô tả tổng thể
-```
+├── product/
+│   ├── public/
+│   │   └── results/
+│   │       ├── buy_product_success.png
+│   │       ├── create_product_success.png
+│   │       ├── create_product_fail.png
+│   │       ├── get_products.png
+│   │       └── no_token.png
+│   ├── src/
+│   │   ├── controllers/
+│   │   │   └── productController.js
+│   │   ├── models/
+│   │   │   └── product.js
+│   │   ├── repositories/
+│   │   │   └── productsRepository.js
+│   │   ├── routes/
+│   │   │   └── productRoutes.js
+│   │   ├── services/
+│   │   │   └── productsService.js
+│   │   ├── test/
+│   │   │   └── product.test.js
+│   │   └── utils/
+│   │       ├── messageBroker.js
+│   │       └── isAuthenticated.js
+│   ├── Dockerfile
+│   ├── package.json
+│   └── .env
+│
+├── docker-compose.yml
+├── .github/
+│   └── workflows/
+│       └── ci-cd.yml
+├── README.md
+└── .gitignore
+
 
 ---
 
-## 3. Cách cài đặt và khởi chạy
-### Bước 1. Chuẩn bị môi trường
-Cài đặt:
-- **Node.js**
-- **MongoDB**
-- **Docker** (để chạy RabbitMQ)
+## V. Mô tả chi tiết hệ thống
 
-Chạy RabbitMQ bằng Docker:
-```bash
-docker run -d --hostname my-rabbit --name rabbitmq -p 5672:5672 -p 15672:15672 rabbitmq:3-management
-```
-RabbitMQ Management UI: [http://localhost:15672](http://localhost:15672)  
-Đăng nhập: `guest / guest`
+### 1. Vấn đề hệ thống giải quyết
+Hệ thống cung cấp nền tảng **thương mại điện tử vi mô**, nơi người dùng có thể đăng ký, đăng nhập, xem sản phẩm và đặt hàng.  
+Các dịch vụ hoạt động độc lập giúp hệ thống **dễ bảo trì, dễ mở rộng và triển khai tự động** qua Docker & GitHub Actions.
 
----
+### 2. Các dịch vụ chính
+- **Auth Service**: Xác thực người dùng, quản lý JWT token.  
+- **Product Service**: CRUD sản phẩm, danh mục.  
+- **Order Service**: Tạo và quản lý đơn hàng, giao tiếp qua RabbitMQ.  
+- **API Gateway**: Cổng trung gian, định tuyến và xác thực request.
 
-### Bước 2. Cài đặt thư viện cho từng service
-Mở 4 terminal riêng và chạy trong từng thư mục:
-```bash
-npm install
-node index.js
-```
+### 3. Các mẫu thiết kế áp dụng
+- Microservices Architecture  
+- Clean Architecture  
+- Message Queue Pattern (RabbitMQ)  
+- API Gateway Pattern  
+- JWT Authentication Pattern
 
-Kết quả mong đợi:
-```
-MongoDB connected
-RabbitMQ connected
-Server started on port [3000 / 3001 / 3002 / 3003]
-```
+### 4. Giao tiếp giữa các dịch vụ
+- **Auth, Product, Order** giao tiếp qua API Gateway (HTTP).  
+- **Product ↔ Order** giao tiếp bất đồng bộ thông qua RabbitMQ.
 
 ---
 
-## 4. Cách kiểm thử các service
-### Auth Service (port 3000)
-- `POST /register` → đăng ký tài khoản
-- `POST /login` → đăng nhập, nhận JWT
-- `GET /dashboard` → xác thực token
+## VI. Thực thi trên Docker
 
-### Product Service (port 3001)
-- `POST /api/products` → thêm sản phẩm
-- `GET /api/products` → lấy danh sách sản phẩm
-- `POST /api/products/buy` → gửi đơn hàng sang RabbitMQ
+Khởi động toàn bộ hệ thống:
+docker-compose up --build
 
-### Order Service (port 3002)
-- Tự động nhận đơn hàng từ hàng đợi `orders`
-- Lưu vào MongoDB
-- Gửi phản hồi lại hàng đợi `products`
+Dừng container:
+docker-compose down
 
-### API Gateway (port 3003)
-Định tuyến request:
-```
-/auth     → http://localhost:3000
-/products → http://localhost:3001/api/products
-/orders   → http://localhost:3002/api/orders
-```
+Khi test, chứng minh rằng Postman đang gọi đến các dịch vụ trên Docker container bằng cách kiểm tra MongoDB container:
+docker exec -it mongodb mongosh
+show dbs
+use auth_db
+db.users.find().pretty()
+
+---
+## VII. Hướng dẫn kiểm thử với Postman
+1. Đăng ký tài khoản người dùng
+
+Endpoint:
+POST http://localhost:3003/auth/register
+  ![Register Success](public/results/register_success.png)
+Sau khi gửi request, kiểm tra MongoDB container để xác nhận user được lưu vào auth_db.
+
+---
+2. Đăng nhập
+
+Endpoint:
+POST http://localhost:3003/auth/login
+  ![Login Success](public/results/login_success.png)
+Lưu lại token trả về để dùng cho các API tiếp theo.
+
+---
+3. Tạo sản phẩm mới
+
+Endpoint:
+POST http://localhost:3003/products
+  ![Create Product Success](public/results/create_product_success.png)
+
+---
+4. Đặt hàng
+
+Endpoint:
+POST http://localhost:3003/products/buy
+  ![Buy Product Success](public/results/buy_product_success.png)
+Product Service gửi message qua RabbitMQ → Order Service tiêu thụ, lưu hóa đơn vào DB.
 
 ---
 
-## 5. Tổng kết trạng thái hệ thống
-| Service | Port | Trạng thái | Mô tả |
-|----------|------|-------------|--------|
-| Auth Service | 3000 |  Hoạt động | Đăng ký & đăng nhập |
-| Product Service | 3001 |  Hoạt động | CRUD sản phẩm & gửi order |
-| Order Service | 3002 |  Hoạt động | Lưu order qua RabbitMQ |
-| API Gateway | 3003 |  Hoạt động | Kết nối & định tuyến các service |
+5. Lấy thông tin hóa đơn theo ID
+
+Endpoint:
+GET http://localhost:3003/products/:id
+![Order_id](./public/results/order_id.png)
 
 ---
+## VIII. Kiểm thử và CI/CD
 
-## 6. Kết luận
-- Hệ thống hoạt động theo mô hình **Microservices hoàn chỉnh**.  
-- Kết nối thành công giữa **MongoDB**, **RabbitMQ**, và **API Gateway**.  
-- Các chức năng chính được kiểm thử đầy đủ bằng **Postman**.  
-- Dự án đáp ứng đúng yêu cầu của **EProject Phase 1**.
+Kiểm thử tự động bằng Mocha + Chai.
+
+CI/CD thực hiện với GitHub Actions:
+
+Test – chạy npm test cho từng service.
+
+Build & Push – build Docker image và push lên Docker Hub.
+
+Deploy – khởi động container qua docker-compose.
+
