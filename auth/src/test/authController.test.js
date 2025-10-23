@@ -1,11 +1,13 @@
-import * as chai from "chai";
+import chai from "chai";
 import chaiHttp from "chai-http";
 import App from "../app.js";
 import dotenv from "dotenv";
 
 dotenv.config();
+
+// Cấu hình Chai và plugin HTTP
 chai.use(chaiHttp);
-const { expect } = chai;
+const { expect, request } = chai;
 
 describe("User Authentication", () => {
     let app;
@@ -24,8 +26,7 @@ describe("User Authentication", () => {
 
     describe("POST /register", () => {
         it("should register a new user", async() => {
-            const res = await chai
-                .request(app.app)
+            const res = await request(app.app)
                 .post("/register")
                 .send({ username: "testuser", password: "password" });
 
