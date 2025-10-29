@@ -38,7 +38,7 @@ Mỗi service đảm nhận một nghiệp vụ riêng biệt: xác thực ngư�
  Auth Service      Product Service       Order Service
    (3000)               (3001)                (3002)
    
-   |                    |                    |
+   |                     |                    |
    ----------------------|--------------------
                          |
                   MongoDB, RabbitMQ
