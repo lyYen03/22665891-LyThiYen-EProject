@@ -30,18 +30,22 @@ Mỗi service đảm nhận một nghiệp vụ riêng biệt: xác thực ngư�
 ## III. Kiến trúc hệ thống (System Architecture)
 
 
-                API Gateway (Port 3003)
-                        |
-   -----------------------------------------------------
-   |                    |                    |
-   
- Auth Service      Product Service       Order Service
-   (3000)               (3001)                (3002)
-   
-   |                     |                    |
-   ----------------------|--------------------
-                         |
-                  MongoDB, RabbitMQ
+                 +----------------------+
+                 |   API Gateway (3003) |
+                 +----------+-----------+
+                            |
+        -----------------------------------------------
+        |                      |                      |
++---------------+      +---------------+      +---------------+
+| Auth Service  |      | Product Svc   |      | Order Service |
+| Port: 3000    |      | Port: 3001    |      | Port: 3002    |
++-------+-------+      +-------+-------+      +-------+-------+
+        \______________________|______________________/
+                               |
+                 +------------------------------------+
+                 |      MongoDB, RabbitMQ             |
+                 +------------------------------------+
+
 ---
 
 ## IV. Cấu trúc thư mục dự án
@@ -86,49 +90,41 @@ EProject-Phase-1/
 │   │   │   └── orderRoutes.js
 │   │   ├── services/
 │   │   │   └── orderService.js
-│   │   ├── test/
-│   │   │   └── order.test.js
-│   │   └── utils/
-│   │       ├── messageBroker.js
-│   │       └── isAuthenticated.js
+│   │   ├── utils/
+│   │   │   ├── messageBroker.js
+│   │   │   └── isAuthenticated.js
+│   │   └── test/
+│   │       └── order.test.js
 │   ├── Dockerfile
 │   ├── package.json
 │   └── .env
 │
 ├── product/
-│   ├── public/
-│   │   └── results/
-│   │       ├── buy_product_success.png
-│   │       ├── create_product_success.png
-│   │       ├── create_product_fail.png
-│   │       ├── get_products.png
-│   │       └── no_token.png
+│   ├── public/results/
+│   │   ├── buy_product_success.png
+│   │   ├── create_product_success.png
+│   │   ├── create_product_fail.png
+│   │   ├── get_products.png
+│   │   └── no_token.png
 │   ├── src/
-│   │   ├── controllers/
-│   │   │   └── productController.js
-│   │   ├── models/
-│   │   │   └── product.js
-│   │   ├── repositories/
-│   │   │   └── productsRepository.js
-│   │   ├── routes/
-│   │   │   └── productRoutes.js
-│   │   ├── services/
-│   │   │   └── productsService.js
-│   │   ├── test/
-│   │   │   └── product.test.js
-│   │   └── utils/
-│   │       ├── messageBroker.js
-│   │       └── isAuthenticated.js
+│   │   ├── controllers/productController.js
+│   │   ├── models/product.js
+│   │   ├── repositories/productsRepository.js
+│   │   ├── routes/productRoutes.js
+│   │   ├── services/productsService.js
+│   │   ├── utils/
+│   │   │   ├── messageBroker.js
+│   │   │   └── isAuthenticated.js
+│   │   └── test/product.test.js
 │   ├── Dockerfile
 │   ├── package.json
 │   └── .env
 │
 ├── docker-compose.yml
-├── .github/
-│   └── workflows/
-│       └── ci-cd.yml
+├── .github/workflows/ci-cd.yml
 ├── README.md
 └── .gitignore
+
 
 
 ---
