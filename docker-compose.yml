@@ -1,16 +1,67 @@
-version: "3"
+version: "3.9"
 services:
+  mongodb:
+    image: mongo:6.0
+    container_name: mongodb
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+
   rabbitmq:
-    image: rabbitmq:latest
+    image: rabbitmq:3-management
     container_name: rabbitmq
     ports:
       - "5672:5672"
-      - "15672:15672" # web management UI (optional)
+      - "15672:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+
+  auth:
+    build: ./auth
+    container_name: auth
+    ports:
+      - "3000:3000"
+    depends_on:
+      - mongodb
+    environment:
+      - MONGODB_AUTH_URI=mongodb://mongodb:27017/auth_db
+      - JWT_SECRET=mysecretkey
+
   product:
     build: ./product
+    container_name: product
+    ports:
+      - "3001:3001"
     depends_on:
+      - mongodb
       - rabbitmq
+    environment:
+      - MONGODB_PRODUCT_URI=mongodb://mongodb:27017/product_db
+      - JWT_SECRET=mysecretkey
+
   order:
     build: ./order
+    container_name: order
+    ports:
+      - "3002:3002"
     depends_on:
+      - mongodb
       - rabbitmq
+    environment:
+      - MONGODB_ORDER_URI=mongodb://mongodb:27017/order_db
+      - RABBITMQ_URI=amqp://guest:guest@rabbitmq:5672
+
+  api-gateway:
+    build: ./api-gateway
+    container_name: api-gateway
+    ports:
+      - "3003:3003"
+    depends_on:
+      - auth
+      - product
+      - order
+
+volumes:
+  mongo_data:
