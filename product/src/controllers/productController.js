@@ -112,14 +112,14 @@ class ProductController {
         }
     }
 
-    async getOrderById(req, res) {
+    async getOID(req, res) {
         try {
             const { id } = req.params;
-            const response = await axios.get(`http://order:3002/api/orders/${id}`);
-            res.status(200).json(response.data);
+            const respon = await axios.get(`http://order:3002/api/orders/${id}`);
+            res.status(200).json(respon.data);
         } catch (err) {
-            console.error("Error fetching order:", err.message);
-            res.status(500).json({ message: "Failed to fetch order" });
+            console.error("error", err.message);
+            res.status(500).json({ message: "failed" });
         }
     }
 
