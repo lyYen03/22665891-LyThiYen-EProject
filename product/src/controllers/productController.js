@@ -122,8 +122,6 @@ class ProductController {
             res.status(500).json({ message: "failed" });
         }
     }
-
-
 }
 
 module.exports = ProductController;
